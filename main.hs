@@ -1,25 +1,70 @@
---{-# LANGUAGE BlockArguments #-}
 --Nim game
 
 board :: [Int]
 board = [1, 3, 5, 7]
 
-{-line1 = 1
+isPlayerPlaying :: Bool -> IO ()
+isPlayerPlaying p = do
+  if p
+    then putStrLn "Human Player is playing"
+    else putStrLn "Computer is playing"
 
-line2 = 3
+changeTurn :: t0 -> Bool -> Bool
+changeTurn t = return not t
 
-line3 = 5
+selectDifficulty :: IO Int
+selectDifficulty = do
+  putStrLn "Select difficulty: "
+  putStrLn "1. Easy"
+  putStrLn "2. Hard"
+  putStrLn "0. Exit"
+  putStr "> "
+  difficulty <- getLine
+  let d = (read difficulty :: Int)
+  if d == 0
+    then return 99
+    else return d
+  --return (read difficulty :: Int)
 
-line4 = 7
+gameMenu :: IO ()
+gameMenu = do
+  putStrLn "Welcome to Nim!"
+  putStrLn "Are you ready?"
+  putStrLn "1. Yes, play"
+  putStrLn "0. No, exit"
+  putStr "> "
+  option <- getLine
+  if (read option :: Int) == 1
+    then
+      --let level = selectDifficulty -- TODO: implement difficulty selection
+      let level = 1
+       in if level == 1
+            then isPlayerPlaying True
+            else
+              if level == 2
+                then isPlayerPlaying False
+                else putStrLn "Invalid option"
+    else putStrLn "Bye!"
 
-board = [line1, line2, line3, line4]-}
+printBoard :: [Int] -> IO ()
+printBoard b = do
+  if (not (null b)) then do
+      let line = "|" ++ (show (head b)) ++ "|"
+      putStrLn line
+      printBoard (tail b)
+    else return ()
 
-gameLoop :: [Int] -> IO ()
-gameLoop board = do
-  putStrLn "Enter a number"
+gameLoop :: [Int] -> Bool -> IO ()
+gameLoop board player = do
+  --putStrLn "Board:" -- TODO: print board in the beginning of the game
+  --printBoard board
+  isPlayerPlaying player
+  putStrLn "Enter the line number"
+  putStr "> "
   number <- getLine
   let lineNumber = read number :: Int
-  putStrLn "Enter a quantity"
+  putStrLn "Enter a how much sticks to take"
+  putStr "> "
   quantity2 <- getLine
   let quantity = read quantity2 :: Int
   let lineVal = getLineVal board lineNumber
@@ -29,21 +74,17 @@ gameLoop board = do
       let newBoard = setLineVal board lineNumber newLineValue
       if checkWin newBoard
         then do
+          putStrLn "Board:"
+          printBoard newBoard
           putStrLn "You win!"
-          --return ()
-        else do
-          gameLoop newBoard
+        else --return ()
+        do
+          putStrLn "Board:"
+          printBoard newBoard
+          gameLoop newBoard (not player)
     else do
       putStrLn "Invalid number"
-      gameLoop board
-
-{-getNumber :: IO Int
-getNumber = do
-  --putStrLn "Enter a number"
-  number <- getLine
-  let n = read number :: Int
-  return n
-  --return number-}
+      gameLoop board player
 
 getLineVal :: [Int] -> Int -> Int
 getLineVal board n = board !! n

@@ -1,9 +1,14 @@
 --Nim game
 
-import Control.Monad
+import Control.Monad --used in printBoard
+--import System.Random --used in getRandomInt
 
 board :: [Int]
 board = [1, 3, 5, 7]
+
+{-Utilities-}
+--getRandomInt :: Int -> Int -> IO Int
+--getRandomInt x y = getStdRandom (randomR (x,y))
 
 printWhoIsPlaying :: Bool -> IO ()
 printWhoIsPlaying p = do
@@ -11,9 +16,8 @@ printWhoIsPlaying p = do
     then putStrLn "Human Player is playing"
     else putStrLn "Computer is playing"
 
---changeTurn :: t0 -> Bool -> Bool
---changeTurn t = return not t
-
+{-Game Logic-}
+--difficulty level selection
 selectDifficulty :: IO Int
 selectDifficulty = do
   putStrLn "Select difficulty: "
@@ -27,6 +31,7 @@ selectDifficulty = do
     then return 99
     else return d
 
+--game main menu
 {-gameMenu :: IO ()
 gameMenu = do --TODO fix the menu
   putStrLn "Welcome to Nim!"
@@ -47,6 +52,29 @@ gameMenu = do --TODO fix the menu
                 else putStrLn "Invalid option"
     else putStrLn "Bye!"-}
 
+--implements the computer's move
+computerTurn :: [Int] -> Bool -> IO [Int]
+computerTurn board godMode = do
+  if godMode
+    then do
+      easyComputerTurn board 0 1 --makes a move taking one sticker at a time, starting from the first line
+    else do
+      putStrLn "Not ready yet" --TODO: implement the computer turn on hard mode
+      return board
+
+--implements the easy computer move
+easyComputerTurn :: [Int] -> Int -> Int -> IO [Int]
+easyComputerTurn board line quantityToRemove = do
+  let lineOldValue = getLineVal board line
+  if lineOldValue /= 0 then do
+    let lineNewValue = lineOldValue - quantityToRemove
+    let newBoard = setLineVal board line lineNewValue
+    return newBoard
+  else do
+    let newLine = line + 1
+    easyComputerTurn board newLine quantityToRemove
+
+--main game loop
 gameLoop :: [Int] -> Bool -> IO ()
 gameLoop board player = do
   putStrLn "Board:"

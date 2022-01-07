@@ -47,13 +47,6 @@ gameMenu = do --TODO fix the menu
                 else putStrLn "Invalid option"
     else putStrLn "Bye!"-}
 
-printBoard :: [Int] -> IO () --TODO print the complete line
-printBoard b = do
-  Control.Monad.when (not (null b)) $ do
-    let line = "|" ++ (show (head b)) ++ "|"
-    putStrLn line
-    printBoard (tail b)
-
 gameLoop :: [Int] -> Bool -> IO ()
 gameLoop board player = do
   putStrLn "Board:"
@@ -93,14 +86,25 @@ gameLoop board player = do
           putStrLn "Invalid line number, please select a number between 0 and 3"
           gameLoop board player
 
---Board functions
+{-Board functions-}
+--gets how many sticks are in a line
 getLineVal :: [Int] -> Int -> Int
 getLineVal board n = board !! n
 
+--updates the number of sticks in a line
 setLineVal :: [Int] -> Int -> Int -> [Int]
 setLineVal board n val =
   let (x, _ : y) = splitAt n board
    in x ++ [val] ++ y
 
+--checks if the game is over
 checkWin :: [Int] -> Bool
 checkWin board = all (== 0) board
+
+--displays the board on the screen
+printBoard :: [Int] -> IO () --TODO print the complete line
+printBoard b = do
+  Control.Monad.when (not (null b)) $ do
+    let line = "|" ++ (show (head b)) ++ "|"
+    putStrLn line
+    printBoard (tail b)

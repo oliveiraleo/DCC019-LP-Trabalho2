@@ -8,13 +8,11 @@ board = [1, 3, 5, 7]
 printWhoIsPlaying :: Bool -> IO ()
 printWhoIsPlaying p = do
   if p
-    then
-      putStrLn "Human Player is playing"
-    else
-      putStrLn "Computer is playing"
+    then putStrLn "Human Player is playing"
+    else putStrLn "Computer is playing"
 
-changeTurn :: t0 -> Bool -> Bool
-changeTurn t = return not t
+--changeTurn :: t0 -> Bool -> Bool
+--changeTurn t = return not t
 
 selectDifficulty :: IO Int
 selectDifficulty = do
@@ -49,9 +47,9 @@ gameMenu = do --TODO fix the menu
                 else putStrLn "Invalid option"
     else putStrLn "Bye!"-}
 
-printBoard :: [Int] -> IO ()
+printBoard :: [Int] -> IO () --TODO print the complete line
 printBoard b = do
-  Control.Monad.when (not (null b)) $ do --TODO print the complete line
+  Control.Monad.when (not (null b)) $ do
     let line = "|" ++ (show (head b)) ++ "|"
     putStrLn line
     printBoard (tail b)
@@ -69,22 +67,33 @@ gameLoop board player = do
   putStr "> "
   quantity2 <- getLine
   let quantity = read quantity2 :: Int
-  let lineVal = getLineVal board lineNumber
-  if lineVal `elem` board
+  if quantity <= 0 --checks if the quantity is valid
     then do
-      let newLineValue = subtract quantity lineVal
-      let newBoard = setLineVal board lineNumber newLineValue
-      if checkWin newBoard
-        then do
-          putStrLn "Board:"
-          printBoard newBoard
-          if player then putStrLn "You win!" else putStrLn "Computer wins!"
-        else do
-          gameLoop newBoard (not player)
-    else do
-      putStrLn "Invalid number"
+      putStrLn "Invalid quantity, please select at least 1 stick on each turn"
       gameLoop board player
+    else do
+      let lineVal = getLineVal board lineNumber
+      if lineNumber >= 0 && lineNumber < 4 --checks if the line exists
+        then do
+          if lineVal >= quantity --checks if the stickers exist
+            then do
+              let newLineValue = subtract quantity lineVal
+              let newBoard = setLineVal board lineNumber newLineValue
+              if checkWin newBoard
+                then do
+                  putStrLn "Board:"
+                  printBoard newBoard
+                  if player then putStrLn "You win!" else putStrLn "Computer wins!"
+                else do
+                  gameLoop newBoard (not player)
+            else do
+              putStrLn "Invalid move, quantity entered is greater than the number of sticks in this line"
+              gameLoop board player
+        else do
+          putStrLn "Invalid line number, please select a number between 0 and 3"
+          gameLoop board player
 
+--Board functions
 getLineVal :: [Int] -> Int -> Int
 getLineVal board n = board !! n
 

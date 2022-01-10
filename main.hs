@@ -1,19 +1,20 @@
 --Nim game
 
 import Control.Monad --used in printBoard
+import System.Random --used in getRandomInt
 
 board :: [Int]
 board = [1, 3, 5, 7]
 
 {-Utilities-}
---getRandomInt :: Int -> Int -> IO Int
---getRandomInt x y = getStdRandom (randomR (x,y))
+getRandomInt :: Int -> Int -> IO Int
+getRandomInt x y = getStdRandom (randomR (x,y))
 
 printWhoIsPlaying :: Bool -> IO ()
 printWhoIsPlaying p = do
   if p
-    then putStrLn "Human Player is playing"
-    else putStrLn "Computer is playing"
+    then putStrLn "-> Human Player is playing"
+    else putStrLn "-> Computer is playing"
 
 {-Game Logic-}
 --difficulty level selection
@@ -56,42 +57,44 @@ computerTurn :: [Int] -> Bool -> IO [Int]
 computerTurn board godMode = do
   if godMode
     then do
-      easyComputerTurn board 0 1 --makes a move taking one sticker at a time, starting from the first line
+      easyComputerTurn board --makes a move taking a random number of stickers at a time on a random line
     else do
       putStrLn "Not ready yet" --TODO: implement the computer turn on hard mode
       return board
 
 --implements the easy computer move
-easyComputerTurn :: [Int] -> Int -> Int -> IO [Int]
-easyComputerTurn board line quantityToRemove = do
+easyComputerTurn :: [Int] -> IO [Int]
+easyComputerTurn board = do
+  line <- getRandomInt 0 3
+  quantityToRemove <- getRandomInt 1 1
   let lineOldValue = getLineVal board line
-  if lineOldValue /= 0
-    then do
+  if lineOldValue /= 0 -- checks if the line still has stickers
+    then do -- if yes, removes the random number of stickers
       let lineNewValue = lineOldValue - quantityToRemove
       let newBoard = setLineVal board line lineNewValue
       return newBoard
-    else do
-      let newLine = line + 1
-      easyComputerTurn board newLine quantityToRemove
+    else do -- if no, tries again with other values
+      easyComputerTurn board
 
 --main game loop
 gameLoop :: [Int] -> Bool -> IO ()
 gameLoop board player = do
-  putStrLn "Board:"
+  putStrLn "\nBoard:"
   printBoard board
+  putStrLn "" --displays a new line for better readability
   printWhoIsPlaying player
   if (player == False)
     then do
       board <- computerTurn board True
       if checkWin board
-        then putStrLn "Computer Wins!"
+        then putStrLn "Oh no!\n---The Machine wins!---\n"
         else gameLoop board (not player)
     else do
-      putStrLn "Enter the line number"
+      putStrLn "Enter the line number you choose:"
       putStr "> "
       number <- getLine
       let lineNumber = read number :: Int
-      putStrLn "Enter a how many sticks to take"
+      putStrLn "Enter a how many sticks to take:"
       putStr "> "
       quantity2 <- getLine
       let quantity = read quantity2 :: Int
@@ -111,7 +114,7 @@ gameLoop board player = do
                     then do
                       putStrLn "Board:"
                       printBoard newBoard
-                      putStrLn "You win!"
+                      putStrLn "Oh yeah!\n!!!You win!!!\n"
                     else do
                       gameLoop newBoard (not player)
                 else do

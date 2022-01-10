@@ -45,10 +45,10 @@ gameMenu = do
       level <- selectDifficulty
       --evaluate difficulty levels
       if level == 1 --easy
-        then gameLoop board True
+        then gameLoop board True False --human starts, machine is in easy mode
         else
           if level == 2 --hard
-            then gameLoop board False
+            then gameLoop board False True --human do not start, machine is in hard mode
             else
               if level == 99 -- quits the game
                 then putStrLn "Bye!"
@@ -60,10 +60,10 @@ computerTurn :: [Int] -> Bool -> IO [Int]
 computerTurn board godMode = do
   if godMode
     then do
-      easyComputerTurn board --makes a move taking a random number of stickers at a time on a random line
-    else do
       putStrLn "Not ready yet" --TODO: implement the computer turn on hard mode
       return board
+    else do
+      easyComputerTurn board --makes a move taking a random number of stickers at a time on a random line
 
 --implements the easy computer move
 easyComputerTurn :: [Int] -> IO [Int]
@@ -82,19 +82,23 @@ easyComputerTurn board = do
       easyComputerTurn board
 
 --main game loop
-gameLoop :: [Int] -> Bool -> IO ()
-gameLoop board player = do
+gameLoop :: [Int] -> Bool -> Bool -> IO ()
+gameLoop board player machineGodMode = do
   putStrLn "\nBoard:"
   printBoard board
   putStrLn "" --displays a new line for better readability
   printWhoIsPlaying player
-  if (player == False)
+  if (player == False) --computer's turn
     then do
-      board <- computerTurn board True
+      board <- computerTurn board machineGodMode
       if checkWin board
-        then putStrLn "\n\nOh no!...\n\n---The Computer wins this time---\n"
-        else gameLoop board (not player)
+        then do
+          putStrLn "Board:\n"
+          printBoard board
+          putStrLn "\n\nOh no!...\n\n---The Computer wins this time---\n"
+        else gameLoop board (not player) machineGodMode
     else do
+      -- player's turn
       putStrLn "Enter the line number you choose:"
       putStr "> "
       number <- getLine
@@ -106,7 +110,7 @@ gameLoop board player = do
       if quantity <= 0 --checks if the quantity is valid
         then do
           putStrLn "Invalid quantity, please select at least 1 stick on each turn"
-          gameLoop board player
+          gameLoop board player machineGodMode
         else do
           let lineVal = getLineVal board lineNumber
           if lineNumber >= 0 && lineNumber < 4 --checks if the line exists
@@ -117,17 +121,17 @@ gameLoop board player = do
                   let newBoard = setLineVal board lineNumber newLineValue
                   if checkWin newBoard
                     then do
-                      putStrLn "Board:"
+                      putStrLn "Board:\n"
                       printBoard newBoard
                       putStrLn "\n\nOh yeah!\n\n!!!You win!!!\n"
                     else do
-                      gameLoop newBoard (not player)
+                      gameLoop newBoard (not player) machineGodMode
                 else do
                   putStrLn "Invalid move, quantity entered is greater than the number of sticks in this line"
-                  gameLoop board player
+                  gameLoop board player machineGodMode
             else do
               putStrLn "Invalid line number, please select a number between 0 and 3"
-              gameLoop board player
+              gameLoop board player machineGodMode
 
 main = gameMenu
 

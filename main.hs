@@ -36,7 +36,7 @@ getEachDigitAux n = n `mod` 10
 --checks if all digits of a number are even
 checkAllEven :: [Int] -> Bool
 checkAllEven [] = True
-checkAllEven (x:xs)
+checkAllEven (x : xs)
   | even x = checkAllEven xs
   | otherwise = False
 
@@ -88,8 +88,8 @@ gameMenu = do
   option <- getLine
   if (read option :: Int) == 1
     then do
-      level <- selectDifficulty
       --evaluate difficulty levels
+      level <- selectDifficulty
       if level == 1 --easy
         then gameLoop board True False --human starts, machine is in easy mode
         else
@@ -107,14 +107,14 @@ computerTurn :: [Int] -> Bool -> IO [Int]
 computerTurn board godMode = do
   if godMode
     then do
-      putStrLn "Not ready yet" --TODO: implement the computer turn on hard mode
-      return board
-    else do
-      easyComputerTurn board --makes a move taking a random number of stickers at a time on a random line
+      if isPerfectBoard board
+        then randomComputerTurn board
+        else perfectComputerTurn board
+    else randomComputerTurn board --makes a move taking a random number of stickers at a time on a random line
 
 --implements the easy computer move
-easyComputerTurn :: [Int] -> IO [Int]
-easyComputerTurn board = do
+randomComputerTurn :: [Int] -> IO [Int]
+randomComputerTurn board = do
   line <- getRandomInt 0 3
   quantityToRemove <- getRandomInt 1 7
   let lineOldValue = getLineVal board line
@@ -126,10 +126,15 @@ easyComputerTurn board = do
       return newBoard
     else do
       -- if no, tries again with other values
-      easyComputerTurn board
+      randomComputerTurn board
 
---implements the hard computer move --TODO
---hardComputerTurn :: [Int] -> IO [Int]
+--implements the hard computer move
+perfectComputerTurn :: [Int] -> IO [Int]
+perfectComputerTurn board = do
+  newBoard <- randomComputerTurn board
+  if isPerfectBoard newBoard
+    then return newBoard
+    else perfectComputerTurn board
 
 --main game loop
 gameLoop :: [Int] -> Bool -> Bool -> IO ()
@@ -197,8 +202,9 @@ setLineVal board n val =
    in x ++ [val] ++ y
 
 --checks if the move was perfect
-checkPerfectMove :: [Int] -> Bool
-checkPerfectMove board = do
+isPerfectBoard :: [Int] -> Bool
+--isPerfectBoard :: [Int] -> [Char]
+isPerfectBoard board = do
   let item1 = head board
   let item2 = board !! 1
   let item3 = board !! 2

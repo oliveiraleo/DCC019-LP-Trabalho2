@@ -1,7 +1,6 @@
 --Nim game
 
 import Control.Monad --used in printBoard
---import System.Random --used in getRandomInt
 
 board :: [Int]
 board = [1, 3, 5, 7]
@@ -32,8 +31,8 @@ selectDifficulty = do
     else return d
 
 --game main menu
-{-gameMenu :: IO ()
-gameMenu = do --TODO fix the menu
+gameMenu :: IO ()
+gameMenu = do
   putStrLn "Welcome to Nim!"
   putStrLn "Are you ready?"
   putStrLn "1. Yes, play"
@@ -41,16 +40,16 @@ gameMenu = do --TODO fix the menu
   putStr "> "
   option <- getLine
   if (read option :: Int) == 1
-    then --let level = selectDifficulty -- TODO: implement difficulty selection
-
-      let level = 1
-       in if level == 1
-            then isPlayerPlaying True --TODO fix this
-            else
-              if level == 2
-                then isPlayerPlaying False
-                else putStrLn "Invalid option"
-    else putStrLn "Bye!"-}
+    then do
+      level <- selectDifficulty
+      if level == 1
+        then gameLoop board True
+        else
+          if level == 2
+            then gameLoop board False
+            else putStrLn "Invalid option"
+      gameLoop board True
+    else putStrLn "Bye!"
 
 --implements the computer's move
 computerTurn :: [Int] -> Bool -> IO [Int]
@@ -66,13 +65,14 @@ computerTurn board godMode = do
 easyComputerTurn :: [Int] -> Int -> Int -> IO [Int]
 easyComputerTurn board line quantityToRemove = do
   let lineOldValue = getLineVal board line
-  if lineOldValue /= 0 then do
-    let lineNewValue = lineOldValue - quantityToRemove
-    let newBoard = setLineVal board line lineNewValue
-    return newBoard
-  else do
-    let newLine = line + 1
-    easyComputerTurn board newLine quantityToRemove
+  if lineOldValue /= 0
+    then do
+      let lineNewValue = lineOldValue - quantityToRemove
+      let newBoard = setLineVal board line lineNewValue
+      return newBoard
+    else do
+      let newLine = line + 1
+      easyComputerTurn board newLine quantityToRemove
 
 --main game loop
 gameLoop :: [Int] -> Bool -> IO ()
@@ -80,39 +80,48 @@ gameLoop board player = do
   putStrLn "Board:"
   printBoard board
   printWhoIsPlaying player
-  putStrLn "Enter the line number"
-  putStr "> "
-  number <- getLine
-  let lineNumber = read number :: Int
-  putStrLn "Enter a how much sticks to take"
-  putStr "> "
-  quantity2 <- getLine
-  let quantity = read quantity2 :: Int
-  if quantity <= 0 --checks if the quantity is valid
+  if (player == False)
     then do
-      putStrLn "Invalid quantity, please select at least 1 stick on each turn"
-      gameLoop board player
+      board <- computerTurn board True
+      if checkWin board
+        then putStrLn "Computer Wins!"
+        else gameLoop board (not player)
     else do
-      let lineVal = getLineVal board lineNumber
-      if lineNumber >= 0 && lineNumber < 4 --checks if the line exists
+      putStrLn "Enter the line number"
+      putStr "> "
+      number <- getLine
+      let lineNumber = read number :: Int
+      putStrLn "Enter a how many sticks to take"
+      putStr "> "
+      quantity2 <- getLine
+      let quantity = read quantity2 :: Int
+      if quantity <= 0 --checks if the quantity is valid
         then do
-          if lineVal >= quantity --checks if the stickers exist
-            then do
-              let newLineValue = subtract quantity lineVal
-              let newBoard = setLineVal board lineNumber newLineValue
-              if checkWin newBoard
-                then do
-                  putStrLn "Board:"
-                  printBoard newBoard
-                  if player then putStrLn "You win!" else putStrLn "Computer wins!"
-                else do
-                  gameLoop newBoard (not player)
-            else do
-              putStrLn "Invalid move, quantity entered is greater than the number of sticks in this line"
-              gameLoop board player
-        else do
-          putStrLn "Invalid line number, please select a number between 0 and 3"
+          putStrLn "Invalid quantity, please select at least 1 stick on each turn"
           gameLoop board player
+        else do
+          let lineVal = getLineVal board lineNumber
+          if lineNumber >= 0 && lineNumber < 4 --checks if the line exists
+            then do
+              if lineVal >= quantity --checks if the stickers exist
+                then do
+                  let newLineValue = subtract quantity lineVal
+                  let newBoard = setLineVal board lineNumber newLineValue
+                  if checkWin newBoard
+                    then do
+                      putStrLn "Board:"
+                      printBoard newBoard
+                      putStrLn "You win!"
+                    else do
+                      gameLoop newBoard (not player)
+                else do
+                  putStrLn "Invalid move, quantity entered is greater than the number of sticks in this line"
+                  gameLoop board player
+            else do
+              putStrLn "Invalid line number, please select a number between 0 and 3"
+              gameLoop board player
+
+main = gameMenu
 
 {-Board functions-}
 --gets how many sticks are in a line

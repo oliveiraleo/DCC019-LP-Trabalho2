@@ -8,7 +8,7 @@ board = [1, 3, 5, 7]
 
 {-Utilities-}
 getRandomInt :: Int -> Int -> IO Int
-getRandomInt x y = getStdRandom (randomR (x,y))
+getRandomInt x y = getStdRandom (randomR (x, y))
 
 printWhoIsPlaying :: Bool -> IO ()
 printWhoIsPlaying p = do
@@ -27,7 +27,7 @@ selectDifficulty = do
   putStr "> "
   difficulty <- getLine
   let d = (read difficulty :: Int)
-  if d == 0
+  if d == 0 -- quits the game
     then return 99
     else return d
 
@@ -43,13 +43,16 @@ gameMenu = do
   if (read option :: Int) == 1
     then do
       level <- selectDifficulty
-      if level == 1
+      --evaluate difficulty levels
+      if level == 1 --easy
         then gameLoop board True
         else
-          if level == 2
+          if level == 2 --hard
             then gameLoop board False
-            else putStrLn "Invalid option"
-      gameLoop board True
+            else
+              if level == 99 -- quits the game
+                then putStrLn "Bye!"
+                else putStrLn "Invalid option"
     else putStrLn "Bye!"
 
 --implements the computer's move
@@ -66,14 +69,16 @@ computerTurn board godMode = do
 easyComputerTurn :: [Int] -> IO [Int]
 easyComputerTurn board = do
   line <- getRandomInt 0 3
-  quantityToRemove <- getRandomInt 1 1
+  quantityToRemove <- getRandomInt 1 7
   let lineOldValue = getLineVal board line
-  if lineOldValue /= 0 -- checks if the line still has stickers
-    then do -- if yes, removes the random number of stickers
+  if (lineOldValue /= 0) && (quantityToRemove <= lineOldValue) -- checks if the line still has stickers and if the quantity to remove is less than the line's value
+    then do
+      -- if yes, removes the random number of stickers
       let lineNewValue = lineOldValue - quantityToRemove
       let newBoard = setLineVal board line lineNewValue
       return newBoard
-    else do -- if no, tries again with other values
+    else do
+      -- if no, tries again with other values
       easyComputerTurn board
 
 --main game loop
@@ -87,7 +92,7 @@ gameLoop board player = do
     then do
       board <- computerTurn board True
       if checkWin board
-        then putStrLn "Oh no!\n---The Machine wins!---\n"
+        then putStrLn "\n\nOh no!...\n\n---The Computer wins this time---\n"
         else gameLoop board (not player)
     else do
       putStrLn "Enter the line number you choose:"
@@ -114,7 +119,7 @@ gameLoop board player = do
                     then do
                       putStrLn "Board:"
                       printBoard newBoard
-                      putStrLn "Oh yeah!\n!!!You win!!!\n"
+                      putStrLn "\n\nOh yeah!\n\n!!!You win!!!\n"
                     else do
                       gameLoop newBoard (not player)
                 else do

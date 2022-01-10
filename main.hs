@@ -7,16 +7,62 @@ board :: [Int]
 board = [1, 3, 5, 7]
 
 {-Utilities-}
+--returns a random integer between x and y
 getRandomInt :: Int -> Int -> IO Int
 getRandomInt x y = getStdRandom (randomR (x, y))
 
+--converts a decimal number to a binary number
+dec2bin :: Int -> [Int]
+dec2bin 0 = [0]
+dec2bin n = reverse (dec2binAux n)
+
+dec2binAux 0 = []
+dec2binAux n
+  | n `mod` 2 == 1 = 1 : dec2binAux (n `div` 2)
+  | n `mod` 2 == 0 = 0 : dec2binAux (n `div` 2)
+
+--converts binary to integer -- lista 4 exercio 3
+bin2int :: [Int] -> Int
+bin2int = foldl (\x y -> x * 10 + y) 0
+
+--extracts all digits from a number
+getEachDigit :: Int -> [Int]
+getEachDigit 0 = []
+getEachDigit n = getEachDigitAux n : getEachDigit (n `div` 10)
+
+getEachDigitAux 0 = 0
+getEachDigitAux n = n `mod` 10
+
+--checks if all digits of a number are even
+checkAllEven :: [Int] -> Bool
+checkAllEven [] = True
+checkAllEven (x:xs)
+  | even x = checkAllEven xs
+  | otherwise = False
+
+--converts decimal to binary and then to integer
+--dec2bin2int :: Int -> Int
+--dec2bin2int = bin2int . dec2bin
+
+--converts a decimal number to a binary number with length = 3
+dec2binlen3 :: Int -> [Int]
+dec2binlen3 n = do
+  let bin = dec2bin n
+  if length bin < 3
+    then do
+      let bin' = replicate (3 - length bin) 0 ++ bin
+      bin'
+    else do
+      bin
+
+--prints whose turn it is
 printWhoIsPlaying :: Bool -> IO ()
 printWhoIsPlaying p = do
   if p
     then putStrLn "-> Human Player is playing"
     else putStrLn "-> Computer is playing"
 
-{-Game Logic-}
+{-Game initial menus-}
 --difficulty level selection
 selectDifficulty :: IO Int
 selectDifficulty = do
@@ -55,6 +101,7 @@ gameMenu = do
                 else putStrLn "Invalid option"
     else putStrLn "Bye!"
 
+{-Game Logic-}
 --implements the computer's move
 computerTurn :: [Int] -> Bool -> IO [Int]
 computerTurn board godMode = do
@@ -80,6 +127,9 @@ easyComputerTurn board = do
     else do
       -- if no, tries again with other values
       easyComputerTurn board
+
+--implements the hard computer move --TODO
+--hardComputerTurn :: [Int] -> IO [Int]
 
 --main game loop
 gameLoop :: [Int] -> Bool -> Bool -> IO ()
@@ -145,6 +195,25 @@ setLineVal :: [Int] -> Int -> Int -> [Int]
 setLineVal board n val =
   let (x, _ : y) = splitAt n board
    in x ++ [val] ++ y
+
+--checks if the move was perfect
+checkPerfectMove :: [Int] -> Bool
+checkPerfectMove board = do
+  let item1 = head board
+  let item2 = board !! 1
+  let item3 = board !! 2
+  let item4 = board !! 3
+
+  let binItem1 = dec2binlen3 item1
+  let binItem2 = dec2binlen3 item2
+  let binItem3 = dec2binlen3 item3
+  let binItem4 = dec2binlen3 item4
+
+  let columnSum = bin2int binItem1 + bin2int binItem2 + bin2int binItem3 + bin2int binItem4
+
+  let columnSumDigits = getEachDigit columnSum
+
+  checkAllEven columnSumDigits
 
 --checks if the game is over
 checkWin :: [Int] -> Bool

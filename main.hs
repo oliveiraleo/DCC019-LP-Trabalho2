@@ -40,17 +40,13 @@ checkAllEven (x : xs)
   | even x = checkAllEven xs
   | otherwise = False
 
---converts decimal to binary and then to integer
---dec2bin2int :: Int -> Int
---dec2bin2int = bin2int . dec2bin
-
 --converts a decimal number to a binary number with length = 3
 dec2binlen3 :: Int -> [Int]
 dec2binlen3 n = do
   let bin = dec2bin n
   if length bin < 3
     then do
-      let bin' = replicate (3 - length bin) 0 ++ bin
+      let bin' = replicate (3 - length bin) 0 ++ bin --adds zeros to the left if necessary
       bin'
     else do
       bin
@@ -117,12 +113,12 @@ randomComputerTurn :: [Int] -> IO [Int]
 randomComputerTurn board = do
   line <- getRandomInt 0 3
   quantityToRemove <- getRandomInt 1 7
-  let lineOldValue = getLineVal board line
+  let lineOldValue = getLineValue board line
   if (lineOldValue /= 0) && (quantityToRemove <= lineOldValue) -- checks if the line still has stickers and if the quantity to remove is less than the line's value
     then do
       -- if yes, removes the random number of stickers
       let lineNewValue = lineOldValue - quantityToRemove
-      let newBoard = setLineVal board line lineNewValue
+      let newBoard = setLineValue board line lineNewValue
       return newBoard
     else do
       -- if no, tries again with other values
@@ -167,13 +163,13 @@ gameLoop board player machineGodMode = do
           putStrLn "Invalid quantity, please select at least 1 stick on each turn"
           gameLoop board player machineGodMode
         else do
-          let lineVal = getLineVal board lineNumber
+          let lineVal = getLineValue board lineNumber
           if lineNumber >= 0 && lineNumber < 4 --checks if the line exists
             then do
               if lineVal >= quantity --checks if the stickers exist
                 then do
                   let newLineValue = subtract quantity lineVal
-                  let newBoard = setLineVal board lineNumber newLineValue
+                  let newBoard = setLineValue board lineNumber newLineValue
                   if checkWin newBoard
                     then do
                       putStrLn "Board:\n"
@@ -190,40 +186,40 @@ gameLoop board player machineGodMode = do
 
 main = gameMenu
 
+--checks if the game is over
+checkWin :: [Int] -> Bool
+checkWin board = all (== 0) board --if the sticks are all gone, the game is over
+
 {-Board functions-}
 --gets how many sticks are in a line
-getLineVal :: [Int] -> Int -> Int
-getLineVal board n = board !! n
+getLineValue :: [Int] -> Int -> Int
+getLineValue board n = board !! n
 
 --updates the number of sticks in a line
-setLineVal :: [Int] -> Int -> Int -> [Int]
-setLineVal board n val =
+setLineValue :: [Int] -> Int -> Int -> [Int]
+setLineValue board n val =
   let (x, _ : y) = splitAt n board
    in x ++ [val] ++ y
 
 --checks if the move was perfect
 isPerfectBoard :: [Int] -> Bool
---isPerfectBoard :: [Int] -> [Char]
 isPerfectBoard board = do
+  --split the board in 4 lines
   let item1 = head board
   let item2 = board !! 1
   let item3 = board !! 2
   let item4 = board !! 3
-
+  --checks how much sticks are in each line and converts them to binary
   let binItem1 = dec2binlen3 item1
   let binItem2 = dec2binlen3 item2
   let binItem3 = dec2binlen3 item3
   let binItem4 = dec2binlen3 item4
-
+  --get the digits together
   let columnSum = bin2int binItem1 + bin2int binItem2 + bin2int binItem3 + bin2int binItem4
-
+  --puts all digits in a list
   let columnSumDigits = getEachDigit columnSum
-
+  --checks if all digits are even numbers
   checkAllEven columnSumDigits
-
---checks if the game is over
-checkWin :: [Int] -> Bool
-checkWin board = all (== 0) board
 
 --displays the board on the screen
 printBoard :: [Int] -> IO () --TODO print the complete line

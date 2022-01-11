@@ -202,6 +202,8 @@ gameLoop board player machineGodMode = do
           putStrLn "Board:\n"
           printBoard board
           putStrLn "\n\nOh no!...\n\n---The Computer wins this time---\n"
+          putStrLn "Going back to the main menu...\n"
+          gameMenu
         else gameLoop board (not player) machineGodMode
     else do
       -- player's turn
@@ -230,6 +232,8 @@ gameLoop board player machineGodMode = do
                       putStrLn "Board:\n"
                       printBoard newBoard
                       putStrLn "\n\nOh yeah!\n\n!!!You win!!!\n"
+                      putStrLn "Going back to the main menu...\n"
+                      gameMenu
                     else do
                       gameLoop newBoard (not player) machineGodMode
                 else do
@@ -277,12 +281,12 @@ isPerfectBoard board = do
   checkAllEven columnSumDigits
 
 --displays the board on the screen
-printBoard :: [Int] -> IO () --TODO print the complete line
+printBoard :: [Int] -> IO ()
+--old version
 {-printBoard b = do
   Control.Monad.when (not (null b)) $ do
     let line = "|" ++ (show (head b)) ++ "|"
     putStrLn line
     printBoard (tail b)-}
+--new version
 printBoard board = putStr $ unlines [show rowNumber ++ " " ++ "( " ++ show stickers ++ " )" ++ ": " ++ replicate stickers '|' | (stickers, rowNumber) <- zip board [0 .. length board]]
-
---printBoard board = putStr $ unlines [show rowNumber ++ " " ++ "( " ++ show stickers ++ " )" ++ ": " ++ take stickers (cycle " | ") | (stickers, rowNumber) <- zip board [0..length board]]

@@ -14,7 +14,7 @@ getRandomInt x y = getStdRandom (randomR (x, y))
 --converts a decimal number to a binary number
 dec2bin :: Int -> [Int]
 dec2bin 0 = [0]
-dec2bin n = reverse (dec2binAux n)
+dec2bin n = reverse (dec2binAux n) --reverse to avoid adding 0s at the end and to get the right order
 
 dec2binAux 0 = []
 dec2binAux n
@@ -58,6 +58,55 @@ printWhoIsPlaying p = do
     then putStrLn "-> Human Player is playing"
     else putStrLn "-> Computer is playing"
 
+--displays all the game information divided in 3 "pages"
+printGameInfo :: Int -> IO ()
+printGameInfo n
+  | n == 0 = do
+    putStrLn "\n|------------------------|"
+    putStrLn "|     Game information   |"
+    putStrLn "|------------------------|"
+    putStrLn "- The game is a two-player game."
+    putStrLn "- The game is played on a board with 4 piles of stickers on each one."
+    putStrLn "- The goal is to remove all the stickers from the board."
+    putStrLn "\n=> Rules:\n"
+    putStrLn "- The game is played in rounds, one player plays per turn."
+    putStrLn "- The player who takes the last sticker from the board wins the game.\n"
+    nextPage <- askForNextPage n
+    printGameInfo nextPage
+  | n == 1 = do
+    putStrLn "\n=> Back-end:\n"
+    putStrLn "- The board is represented by a list of 4 integers, each representing the number of stickers on each pile."
+    putStrLn "- The line number is the index of the list, starting from 0."
+    putStrLn "- The player is represented by a boolean, True for the human player and False for the machine."
+    putStrLn "- There are two levels available: easy and hard."
+    putStrLn "--Easy mode: the human player starts the game."
+    putStrLn "--Hard mode: the machine starts the game and then, if possible, only makes perfect moves.\n"
+    nextPage <- askForNextPage n
+    printGameInfo nextPage
+  | n == 2 = do
+    putStrLn "\n=> Board:\n"
+    putStrLn "- The board is displayed containing:"
+    putStrLn "--The number of the line of the board;"
+    putStrLn "--The number of stickers on each pile; and"
+    putStrLn "--The simulated physical representation of each sticker."
+    putStrLn "\n=> Example:\n"
+    putStrLn "- If the board is the list [1, 3, 5, 7], it will be represented as below:\n"
+    putStrLn "0 ( 1 ): |"
+    putStrLn "1 ( 3 ): |||"
+    putStrLn "2 ( 5 ): |||||"
+    putStrLn "3 ( 7 ): |||||||"
+    putStrLn "\nGood luck!\n"
+    nextPage <- askForNextPage n
+    printGameInfo nextPage
+  | otherwise = gameMenu --goes back to the main menu when finished
+
+--asks the user if he wants to see the next page
+askForNextPage :: Int -> IO Int
+askForNextPage pageNumber = do
+  putStrLn "Press enter to continue..."
+  getLine
+  return (pageNumber + 1)
+
 {-Game initial menus-}
 --difficulty level selection
 selectDifficulty :: IO Int
@@ -76,13 +125,15 @@ selectDifficulty = do
 --game main menu
 gameMenu :: IO ()
 gameMenu = do
-  putStrLn "Welcome to Nim!"
+  putStrLn "Welcome to Nim!\n"
   putStrLn "Are you ready?"
-  putStrLn "1. Yes, play"
-  putStrLn "0. No, exit"
+  putStrLn "1. Yes, let's play!"
+  putStrLn "9. Hold on, give me some information about the game first"
+  putStrLn "0. Not yet, exit"
   putStr "> "
   option <- getLine
-  if (read option :: Int) == 1
+  let selectedOption = (read option :: Int)
+  if selectedOption == 1
     then do
       --evaluate difficulty levels
       level <- selectDifficulty
@@ -90,18 +141,22 @@ gameMenu = do
         then gameLoop board True False --human starts, machine is in easy mode
         else
           if level == 2 --hard
-            then gameLoop board False True --human do not start, machine is in hard mode
+            then gameLoop board False True --the human does not start, machine is in hard mode
             else
               if level == 99 -- quits the game
                 then putStrLn "Bye!"
                 else putStrLn "Invalid option"
-    else putStrLn "Bye!"
+    else
+      if selectedOption == 9
+        then do
+          printGameInfo 0 --prints the game information, starting from the first page
+        else putStrLn "Bye!"
 
 {-Game Logic-}
 --implements the computer's move
 computerTurn :: [Int] -> Bool -> IO [Int]
 computerTurn board godMode = do
-  if godMode
+  if godMode --checks if it is in the hard mode
     then do
       if isPerfectBoard board
         then randomComputerTurn board
@@ -223,8 +278,11 @@ isPerfectBoard board = do
 
 --displays the board on the screen
 printBoard :: [Int] -> IO () --TODO print the complete line
-printBoard b = do
+{-printBoard b = do
   Control.Monad.when (not (null b)) $ do
     let line = "|" ++ (show (head b)) ++ "|"
     putStrLn line
-    printBoard (tail b)
+    printBoard (tail b)-}
+printBoard board = putStr $ unlines [show rowNumber ++ " " ++ "( " ++ show stickers ++ " )" ++ ": " ++ replicate stickers '|' | (stickers, rowNumber) <- zip board [0 .. length board]]
+
+--printBoard board = putStr $ unlines [show rowNumber ++ " " ++ "( " ++ show stickers ++ " )" ++ ": " ++ take stickers (cycle " | ") | (stickers, rowNumber) <- zip board [0..length board]]

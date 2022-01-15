@@ -9,7 +9,7 @@ There are two levels of difficulty: easy and hard. On the easy mode, the machine
 
 ### Demo
 
-![](https://github.com/oliveiraleo/DCC019-LP-Trabalho2/nim-quick-demo.GIF)
+![](https://github.com/oliveiraleo/DCC019-LP-Trabalho2/blob/main/nim-quick-demo.GIF)
 
  For more information about my implementation, please refer to the option 9 of the game menu and/or my source code above. General information can be found at [Wikipedia](https://en.wikipedia.org/wiki/Nim).
 
